@@ -1,0 +1,6 @@
+AutoRepairBench/bin/*
+AutoRepairBench/lib/*
+AutoRepairBench/obj/*
+*.snk
+.idea
+packages
