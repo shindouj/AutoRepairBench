@@ -1,8 +1,10 @@
 ﻿using System;
+using CMS.UI.Windows;
+using CMS.UI.Windows.Base;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.0.2", "jeikobu__")]
+[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.1.0", "jeikobu__")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2021")]
 namespace AutoRepairBench
 {
@@ -27,51 +29,66 @@ namespace AutoRepairBench
             if (!Input.GetKeyDown(_config.BindKey)) return;
             
             var inventory = Singleton<Inventory>.Instance;
+            var gameManager = Singleton<GameManager>.Instance;
+            var repairPartWindow = Singleton<RepairPartWindow>.Instance;
+            var currentDifficulty = gameManager.ProfileManager.GetSelectedProfileDifficulty();
             var uiManager = UIManager.Get();
+
+            MoneyCalculator moneyCalculator = new MoneyCalculator(_config, gameManager, repairPartWindow);
+            IPartHandler partHandler = new VanillaPartHandler(inventory, _config, moneyCalculator);
 
             if (_config.ShouldFixItems)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Fixed {FixItems(inventory)} items", PopupType.Normal);
+                try
+                {
+                    uiManager.ShowPopup(Config.ConfigCategory,
+                        $"Fixed {partHandler.FixCarParts()} items",
+                        PopupType.Normal);
+                }
+                catch (CannotAffordException ex)
+                {
+                    uiManager.ShowPopup(Config.ConfigCategory, 
+                        $"Could not afford to fix all of the parts. Fixed ${ex.Count} parts.", 
+                        PopupType.Normal);
+                }
             }
 
             if (_config.ShouldFixBodyParts)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Fixed {FixBodyParts(inventory)} body parts", PopupType.Normal);
+                try
+                {
+                    uiManager.ShowPopup(Config.ConfigCategory,
+                        $"Fixed {partHandler.FixBodyParts()} body parts",
+                        PopupType.Normal);
+                }
+                catch (CannotAffordException ex)
+                {
+                    uiManager.ShowPopup(Config.ConfigCategory, 
+                        $"Could not afford to fix all of the body parts. Fixed ${ex.Count} parts.", 
+                        PopupType.Normal);
+                }
             }
 
             if (_config.ShouldLatheBrakeDiscs)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Lathed {LatheBrakes(inventory)} brake discs", PopupType.Normal);
+                uiManager.ShowPopup(Config.ConfigCategory, 
+                    $"Lathed {LatheBrakes(inventory)} brake discs", 
+                    PopupType.Normal);
             }
             
             if (_config.ShouldBalanceWheels)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Balanced {BalanceWheels(inventory)} wheels", PopupType.Normal);
+                uiManager.ShowPopup(Config.ConfigCategory, 
+                    $"Balanced {BalanceWheels(inventory)} wheels", 
+                    PopupType.Normal);
             }
-        }
 
-        private int FixItems(Inventory inventory)
-        {
-            var repairItems = inventory.GetItemsForRepairTable(false);
-            
-            foreach (var choosePartDownItem in repairItems)
+            if (_config.ShouldScrapParts && currentDifficulty != DifficultyLevel.Sandbox)
             {
-                inventory.GetItem(choosePartDownItem.BaseItem.UID).FixItem();
+                uiManager.ShowPopup(Config.ConfigCategory, 
+                    $"Turned {ScrapParts(inventory)} parts into scraps", 
+                    PopupType.Normal);
             }
-
-            return repairItems._size;
-        }
-
-        private int FixBodyParts(Inventory inventory)
-        {
-            var repairBodyItems = inventory.GetItemsForRepairTable(true);
-            
-            foreach (var choosePartDownItem in repairBodyItems)
-            {
-                inventory.GetItem(choosePartDownItem.BaseItem.UID).FixItem();
-            }
-
-            return repairBodyItems._size;
         }
 
         private int LatheBrakes(Inventory inventory)
@@ -83,7 +100,7 @@ namespace AutoRepairBench
                 inventory.GetItem(brakeDisc.UID).FixItem();
             }
 
-            return brakeDiscs._size;
+            return brakeDiscs.Count;
         }
 
         private int BalanceWheels(Inventory inventory)
@@ -105,7 +122,39 @@ namespace AutoRepairBench
                 }
             }
 
-            return unbalancedWheels._size;
+            return unbalancedWheels.Count;
+        }
+
+        private int ScrapParts(Inventory inventory)
+        {
+            var scrapItems = inventory.GetItemsForScrapProduction(_config.MinScrapPartCondition, _config.MaxScrapPartCondition);
+            foreach (var choosePartDownItem in scrapItems)
+            {
+                var item = inventory.GetItem(choosePartDownItem.BaseItem.UID);
+                var scrapFromItem = GlobalData.GetScrapFromItem(item, ScrapType.BigBonus);
+                
+                Debug($"(ScrapParts) {item.ToPrettyString()}");
+                Debug($"(ScrapParts) {scrapFromItem}");
+                
+                GlobalData.AddPlayerScraps(scrapFromItem);
+                inventory.Delete(item);
+            }
+
+            return scrapItems.Count;
+        }
+
+        private int UpgradeParts(Inventory inventory)
+        {
+            var upgradeParts = inventory.GetItemsForScrapUpgrade();
+            foreach (var choosePartDownItem in upgradeParts)
+            {
+                var item = inventory.GetItem(choosePartDownItem.BaseItem.UID);
+                var price = GlobalData.GetCostForScrapUpgrade(3, Helper.GetPrice(item));
+                item.Quality = 3;
+                
+            }
+
+            return 0;
         }
 
         private void Debug(string msg)

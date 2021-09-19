@@ -24,14 +24,14 @@
 
             return ($"(Item) ID: {item.ID}, UID: {item.UID}, Condition: {item.Condition}, Dent: {item.Dent}, " +
                     $"Quality: {item.Quality}, IsExamined: {item.IsExamined}, RepairAmount: {item.RepairAmount}, " +
-                    $"WashFactor: {item.WashFactor}, WasCollected: {item.WasCollected}, " +
-                    $"OutsideRustEnabled: {item.OutsideRustEnabled}");
+                    $"WashFactor: {item.WashFactor}, OutsideRustEnabled: {item.OutsideRustEnabled}");
         }
 
         public static void FixItem(this Item item)
         {
             if (item == null) return;
             item.Condition = 1.0f;
+            item.Dent = 0.0f;
         }
     }
 }
