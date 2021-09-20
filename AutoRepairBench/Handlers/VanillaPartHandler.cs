@@ -1,5 +1,4 @@
 ﻿using CMS.Containers;
-using MelonLoader;
 
 namespace AutoRepairBench
 {
@@ -43,17 +42,9 @@ namespace AutoRepairBench
                 return false;
             }
 
-            Debug(item.ToPrettyString());
+            LogHelper.Debug(item.ToPrettyString());
             item.FixItem();
             return true;
-        }
-        
-        private void Debug(string msg)
-        {
-            if (_config.DebugOutput)
-            {
-                MelonLogger.Msg($"[DEBUG] [ItemHandler] {msg}");
-            }
         }
     }
 }

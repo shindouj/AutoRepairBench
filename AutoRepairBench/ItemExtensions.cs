@@ -1,4 +1,6 @@
-﻿namespace AutoRepairBench
+﻿using CMS.Containers;
+
+namespace AutoRepairBench
 {
     public static class ItemExtensions
     {
