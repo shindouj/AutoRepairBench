@@ -1,20 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CMS.Containers;
+using CMS.UI.Windows;
+using CMS.UI.Windows.Base;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.0.2", "jeikobu__")]
+[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.1.0", "jeikobu__")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2021")]
 namespace AutoRepairBench
 {
     public class AutoRepairBench : MelonMod
     {
-        private const KeyCode BindKeyCode = KeyCode.F12;
         private Config _config;
-
-        public AutoRepairBench()
-        {
-            
-        }
 
         public override void OnApplicationStart()
         {
@@ -24,96 +23,97 @@ namespace AutoRepairBench
 
         public override void OnUpdate()
         {
+            if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(_config.BindKey))
+            {
+                _config.Reload();
+                UIManager.Get().ShowInfoWindow("[DEBUG] Config has been reloaded.");
+            }
+            
             if (!Input.GetKeyDown(_config.BindKey)) return;
             
             var inventory = Singleton<Inventory>.Instance;
+            var gameManager = Singleton<GameManager>.Instance;
+            var repairPartWindow = Singleton<RepairPartWindow>.Instance;
+            var currentDifficulty = gameManager.ProfileManager.GetSelectedProfileDifficulty();
             var uiManager = UIManager.Get();
+
+            var moneyCalculator = new MoneyCalculator(_config, gameManager, repairPartWindow);
+            var scrapHandler = new ScrapHandler(inventory, _config);
+            var miscHandler = new MiscHandler(inventory);
+            var upgradeHandler = new UpgradeHandler(inventory, moneyCalculator);
+            IPartHandler partHandler = new VanillaPartHandler(inventory, _config, moneyCalculator);
 
             if (_config.ShouldFixItems)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Fixed {FixItems(inventory)} items", PopupType.Normal);
+                try
+                {
+                    uiManager.ShowPopup(Config.ModName,
+                        $"Fixed {partHandler.FixCarParts()} items",
+                        PopupType.Normal);
+                }
+                catch (CannotAffordException ex)
+                {
+                    uiManager.ShowPopup(Config.ModName, 
+                        $"Could not afford to fix all of the parts. Fixed {ex.Count} parts.", 
+                        PopupType.Normal);
+                }
             }
 
             if (_config.ShouldFixBodyParts)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Fixed {FixBodyParts(inventory)} body parts", PopupType.Normal);
+                try
+                {
+                    uiManager.ShowPopup(Config.ModName,
+                        $"Fixed {partHandler.FixBodyParts()} body parts",
+                        PopupType.Normal);
+                }
+                catch (CannotAffordException ex)
+                {
+                    uiManager.ShowPopup(Config.ModName, 
+                        $"Could not afford to fix all of the body parts. Fixed {ex.Count} parts.", 
+                        PopupType.Normal);
+                }
             }
 
             if (_config.ShouldLatheBrakeDiscs)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Lathed {LatheBrakes(inventory)} brake discs", PopupType.Normal);
+                uiManager.ShowPopup(Config.ModName, 
+                    $"Lathed {miscHandler.LatheBrakes()} brake discs", 
+                    PopupType.Normal);
             }
             
             if (_config.ShouldBalanceWheels)
             {
-                uiManager.ShowPopup("AutoRepairBench", $"Balanced {BalanceWheels(inventory)} wheels", PopupType.Normal);
-            }
-        }
-
-        private int FixItems(Inventory inventory)
-        {
-            var repairItems = inventory.GetItemsForRepairTable(false);
-            
-            foreach (var choosePartDownItem in repairItems)
-            {
-                inventory.GetItem(choosePartDownItem.BaseItem.UID).FixItem();
+                uiManager.ShowPopup(Config.ModName, 
+                    $"Balanced {miscHandler.BalanceWheels()} wheels", 
+                    PopupType.Normal);
             }
 
-            return repairItems._size;
-        }
-
-        private int FixBodyParts(Inventory inventory)
-        {
-            var repairBodyItems = inventory.GetItemsForRepairTable(true);
-            
-            foreach (var choosePartDownItem in repairBodyItems)
+            if (_config.ShouldScrapParts && currentDifficulty != DifficultyLevel.Sandbox)
             {
-                inventory.GetItem(choosePartDownItem.BaseItem.UID).FixItem();
+                uiManager.ShowPopup(Config.ModName, 
+                    $"Turned {scrapHandler.ScrapParts()} parts into scraps", 
+                    PopupType.Normal);
             }
 
-            return repairBodyItems._size;
-        }
-
-        private int LatheBrakes(Inventory inventory)
-        {
-            var brakeDiscs = inventory.GetItemsForBrakeLathe();
-
-            foreach (var brakeDisc in brakeDiscs)
+            if (_config.ShouldUpgradeParts)
             {
-                inventory.GetItem(brakeDisc.UID).FixItem();
-            }
-
-            return brakeDiscs._size;
-        }
-
-        private int BalanceWheels(Inventory inventory)
-        {
-            var unbalancedWheels = inventory.GetUnbalancedWheels();
-
-            foreach (var baseItem in unbalancedWheels)
-            {
-                var groupItem = inventory.GetGroup(baseItem.UID);
-                Debug(groupItem.ToPrettyString());
-                
-                foreach (var itemListItem in groupItem.ItemList)
+                try
                 {
-                    Debug(itemListItem.ToPrettyString());
-                    
-                    var data = itemListItem.WheelData;
-                    data.IsBalanced = true;
-                    itemListItem.WheelData = data;
+                    uiManager.ShowPopup(Config.ModName,
+                        $"Upgraded {upgradeHandler.UpgradeParts()} parts for scraps",
+                        PopupType.Normal);
                 }
-            }
-
-            return unbalancedWheels._size;
-        }
-
-        private void Debug(string msg)
-        {
-            if (_config.DebugOutput)
-            {
-                MelonLogger.Msg($"[DEBUG] {msg}");
+                catch (CannotAffordException ex)
+                {
+                    uiManager.ShowPopup(Config.ModName, 
+                        $"Could not afford to upgrade all of the parts. Upgraded {ex.Count} parts.", 
+                        PopupType.Normal);
+                }
+                
             }
         }
+
+        
     }
 }
