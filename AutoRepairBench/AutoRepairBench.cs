@@ -2,7 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.2.0-b1", "jeikobu__")]
+[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.2.0-b2", "jeikobu__")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2021")]
 namespace AutoRepairBench
 {
@@ -24,8 +24,8 @@ namespace AutoRepairBench
                 UIManager.Get().ShowInfoWindow("[DEBUG] Config has been reloaded.");
             }
             
-            if (!Input.GetKeyDown(_config.RepairBindKey) || 
-                !Input.GetKeyDown(_config.ScrappingBindKey) ||
+            if (!Input.GetKeyDown(_config.RepairBindKey) && 
+                !Input.GetKeyDown(_config.ScrappingBindKey) &&
                 !Input.GetKeyDown(_config.UpgradeBindKey)) return;
             
             var inventory = Singleton<Inventory>.Instance;
