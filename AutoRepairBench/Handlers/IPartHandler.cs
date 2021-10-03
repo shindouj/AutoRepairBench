@@ -1,4 +1,6 @@
-﻿namespace AutoRepairBench
+﻿using System.Linq;
+
+namespace AutoRepairBench
 {
     public abstract class IPartHandler
     {
@@ -14,5 +16,13 @@
         }
         public abstract int FixCarParts();
         public abstract int FixBodyParts();
+
+        public void FixDentLessThan1()
+        {
+            _inventory.items.ToArray().ToList()
+                .FindAll(it => it.Dent < 1f)
+                .ForEach(it => it.Dent = 1f);
+            _config.FixedDentBug();
+        }
     }
 }

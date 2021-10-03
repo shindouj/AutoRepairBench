@@ -47,6 +47,7 @@
     <Compile Include="Handlers\IPartHandler.cs" />
     <Compile Include="Handlers\MiscHandler.cs" />
     <Compile Include="Handlers\ScrapHandler.cs" />
+    <Compile Include="Handlers\UniversalPartHandler.cs" />
     <Compile Include="Handlers\UpgradeHandler.cs" />
     <Compile Include="Handlers\VanillaPartHandler.cs" />
     <Compile Include="LogHelper.cs" />
