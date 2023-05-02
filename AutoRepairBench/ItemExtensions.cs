@@ -26,14 +26,16 @@ namespace AutoRepairBench
 
             return ($"(Item) ID: {item.ID}, UID: {item.UID}, Condition: {item.Condition}, Dent: {item.Dent}, " +
                     $"Quality: {item.Quality}, IsExamined: {item.IsExamined}, RepairAmount: {item.RepairAmount}, " +
-                    $"WashFactor: {item.WashFactor}, OutsideRustEnabled: {item.OutsideRustEnabled}");
+                    $"WashFactor: {item.WashFactor}, OutsideRustEnabled: {item.OutsideRustEnabled}, Livery: {item.Livery}, " +
+                    $"LiveryStrength: {item.LiveryStrength}, NormalID: {item.NormalID}, ConditionToShow: {item.ConditionToShow}," +
+                    $"LPData: {item.LPData}");
         }
 
         public static void FixItem(this Item item)
         {
             if (item == null) return;
             item.Condition = 1.0f;
-            item.Dent = 0.0f;
+            item.Dent = 1.0f;
         }
     }
 }
