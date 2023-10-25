@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Il2Cpp;
 
 namespace AutoRepairBench
 {
@@ -45,6 +46,16 @@ namespace AutoRepairBench
             var blacklist = _config.FixCarPartBlacklist;
             var minCondition = _config.MinFixCarPartCondition;
             var maxCondition = _config.MaxFixCarPartCondition;
+
+            if (maxCondition >= 99)
+            {
+                return _inventory.items.ToArray().ToList().FindAll(it =>
+                    !blacklist.Contains(it.ID) &&
+                    it.Condition >= minCondition &&
+                    it.Condition < 100 &&
+                    !it.ID.StartsWith("car_"))
+                    .ToList();
+            }
             
             return _inventory.items.ToArray().ToList().FindAll(it => 
                 !blacklist.Contains(it.ID) &&

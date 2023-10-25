@@ -1,8 +1,9 @@
-﻿using CMS.UI.Windows;
+﻿using Il2Cpp;
+using Il2CppCMS.UI.Windows;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.2.0-b2", "jeikobu__")]
+[assembly: MelonInfo(typeof(AutoRepairBench.AutoRepairBench), "AutoRepairBench", "0.2.1", "jeikobu__")]
 [assembly: MelonGame("Red Dot Games", "Car Mechanic Simulator 2021")]
 namespace AutoRepairBench
 {

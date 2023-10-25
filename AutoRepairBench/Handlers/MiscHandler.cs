@@ -1,3 +1,5 @@
+using Il2Cpp;
+
 namespace AutoRepairBench
 {
     public class MiscHandler
